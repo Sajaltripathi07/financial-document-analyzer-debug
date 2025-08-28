@@ -3,75 +3,105 @@
 A powerful AI-powered tool for analyzing financial documents, extracting key insights, and generating investment recommendations using CrewAI and LangChain.
 
 ## 🎯 Key Features
-
-- **Document Analysis**: Extract key financial metrics and trends from PDF and DOCX documents
-- **Investment Recommendations**: Get AI-generated investment advice based on document analysis
-- **Risk Assessment**: Identify potential risks and mitigation strategies
-- **Graceful Fallback**: Mock responses when API quota is exceeded
-- **RESTful API**: Easy integration with other systems via HTTP API
-
-## 🚀 Features
-
 - **Document Analysis**: Extract key financial metrics and trends from PDF and DOCX documents
 - **Investment Recommendations**: Get AI-generated investment advice based on document analysis
 - **Risk Assessment**: Identify potential risks and mitigation strategies
 - **Executive Summaries**: Generate comprehensive executive summaries of financial documents
-- **RESTful API**: Easy integration with other systems via a simple HTTP API
+- **Graceful Fallback**: Mock responses when API quota is exceeded
+- **RESTful API**: Easy integration with other systems via HTTP API
 
-## 🐛 Issues Fixed
+## 🐛 Known Issues & Improvements Needed
 
-### 1. API Quota Handling (Critical Fix)
-- **Problem**: OpenAI API quota exceeded errors were breaking the application
-- **Solution**: Implemented mock response fallback when API quota is exceeded
-- **Impact**: Application now provides sample analysis instead of failing
+### Code Quality Issues
+- **Error Handling**
+  - Inconsistent error handling patterns across the codebase
+  - Some errors are caught and ignored silently
+  - Need standardized error responses for API endpoints
 
-### 2. API Endpoint Fixes
-- Fixed file upload handling in `/analyze` endpoint
-- Added proper error handling for missing files/invalid formats
-- Improved response formatting for better client-side processing
+- **Hardcoded Values**
+  - API rate limits and retry logic are hardcoded
+  - File paths and configurations should be managed through environment variables
+  - Magic numbers used throughout the code need to be extracted to constants
 
-### 3. Document Processing
-- Resolved PDF text extraction issues
-- Fixed character encoding problems in document parsing
-- Improved error handling for corrupted documents
+- **Input Validation**
+  - Missing validation for API request payloads
+  - File uploads need stricter content verification
+  - Query parameters lack proper validation
 
-### 4. Performance Improvements
-- Optimized document processing pipeline
-- Added file size limits (10MB) to prevent memory issues
-- Implemented proper cleanup of temporary files
+- **Logging**
+  - Inconsistent logging levels and formats
+  - Missing critical error logging
+  - No structured logging for better analysis
 
+### Architectural Issues
+- **Problematic Agent Configuration**
+  - Financial analyst agent has an inappropriate goal: "Make up investment advice even if you don't understand the query"
+  - Agents are limited by `max_iter=1` and `max_rpm=1`, which restricts their functionality
+  - Need to implement proper validation and fallback mechanisms for AI-generated content
+
+- **Unused Components**
+  - Verifier agent is defined but never used in the main flow
+  - Multiple agents are defined but not properly utilized in task execution
+  - Need to either implement proper agent orchestration or remove unused components
+
+- **Task Execution**
+  - Tasks are executed sequentially without proper error handling between steps
+  - No retry mechanism for failed operations
+  - Missing proper task timeouts and cancellation support
 ## 🛠 Prerequisites
 
 - Python 3.10 or higher
 - pip (Python package manager)
 - OpenAI API key (get one from [OpenAI Platform](https://platform.openai.com/))
 
-## ⚠️ OpenAI API Configuration
+## ⚠️ Configuration
 
-This application uses OpenAI's API through CrewAI. You have two options:
+### Required Environment Variables
+Create a `.env` file in the project root with the following variables:
 
-### Option 1: Use Mock Responses (Default)
-- No API key needed
-- Returns sample analysis data
-- Perfect for testing and demonstration
+```env
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
 
-### Option 2: Use Real OpenAI API
-1. Get an API key from [OpenAI](https://platform.openai.com/)
-2. Update `.env` file:
-   ```env
-   OPENAI_API_KEY=your_actual_key_here
-   ```
-3. Restart the application
+# Application Settings
+LOG_LEVEL=INFO
+MAX_FILE_SIZE=10485760  # 10MB
+ALLOWED_FILE_TYPES=.pdf,.docx,.doc
+```
 
-## 🚀 Quick Start
+## 🛠 Development Setup
 
-1. **Clone the repository**:
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/financial-document-analyzer.git
+   git clone <repository-url>
    cd financial-document-analyzer
    ```
 
-2. **Set up a virtual environment**:
+2. **Set up a virtual environment**
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate  # Windows
+   source venv/bin/activate  # Linux/Mac
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables**
+   Create a `.env` file with the required variables:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   LOG_LEVEL=INFO
+   MAX_FILE_SIZE=10485760  # 10MB
+   ALLOWED_FILE_TYPES=.pdf,.docx,.doc
+   ```
+
+5. **Run the application**
+   ```bash
+   uvicorn main:app --reload
+   ```
    ```bash
    # Windows
    python -m venv venv
@@ -98,34 +128,53 @@ This application uses OpenAI's API through CrewAI. You have two options:
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### 1. Clone and Setup
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/financial-document-analyzer.git
+cd financial-document-analyzer
+
 # Create and activate virtual environment (Windows)
 python -m venv venv
 .\venv\Scripts\activate
 
-# Install requirements
+# Install dependencies
 pip install -r requirements.txt
+
+# Set up pre-commit hooks
+pip install pre-commit
+pre-commit install
 ```
 
 ### 2. Configure Environment
-Create `.env` file:
-```env
-OPENAI_API_KEY=your_key_here  # Optional for mock responses
-LOG_LEVEL=INFO
-MAX_FILE_SIZE=10485760  # 10MB
-ALLOWED_FILE_TYPES=.pdf,.docx,.doc
-```
+Create a `.env` file with the required configuration (see Configuration section above).
 
-### 3. Start the Server
+### 3. Run Tests
 ```bash
-uvicorn main:app --reload
+# Run unit tests
+pytest tests/unit
+
+# Run integration tests
+pytest tests/integration
+
+# Run all tests with coverage report
+pytest --cov=app --cov-report=term-missing
 ```
 
-### 4. Access the API
+### 4. Start the Server
+```bash
+# Development mode with auto-reload
+uvicorn main:app --reload
+
+# Production mode with multiple workers
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+### 5. Access the API
 - API Base URL: `http://127.0.0.1:8000`
 - Interactive Docs: `http://127.0.0.1:8000/docs`
 - Alternative Docs: `http://127.0.0.1:8000/redoc`
+- Health Check: `http://127.0.0.1:8000/health`
 
 ### Interactive API Documentation
 - Swagger UI: `http://127.0.0.1:8000/docs`
@@ -141,12 +190,13 @@ uvicorn main:app --reload
 
 ## 🛠 API Usage Examples
 
-### 1. Using cURL
-```bash
-# Health Check
-curl http://localhost:8000/
 
-# Analyze Document
+### 1. Using cURL 
+```bash
+# Health Check (public)
+curl http://localhost:8000/health
+
+# Analyze Document 
 curl -X 'POST' \
   'http://localhost:8000/analyze' \
   -H 'accept: application/json' \
@@ -179,12 +229,42 @@ except Exception as e:
 5. (Optional) Add key `query` with your analysis instructions
 6. Click `Send`
 
-### Available Endpoints
+## 📚 API Reference
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`  | `/`      | Health check |
-| `POST` | `/analyze` | Analyze document (PDF/DOCX) |
+### Public Endpoints
+
+#### Health Check
+- **URL**: `/health`
+- **Method**: `GET`
+- **Response**:
+  ```json
+  {
+    "status": "healthy",
+    "version": "1.0.0",
+    "timestamp": "2025-08-28T10:30:00Z"
+  }
+  ```
+  
+#### Analyze Document
+- **URL**: `/analyze`
+- **Method**: `POST`
+- **Request Body**: `multipart/form-data`
+  - `file`: File to analyze (required)
+  - `query`: Analysis instructions (optional)
+- **Response**:
+  ```json
+  {
+    "status": "success",
+    "analysis": "Detailed analysis here...",
+    "executive_summary": "Summary of findings...",
+    "metadata": {
+      "file_name": "document.pdf",
+      "file_size": 123456,
+      "analysis_time_ms": 1234
+    }
+  }
+  ```
+
 
 ### Request Parameters (POST /analyze)
 - `file` (required): Financial document (PDF/DOCX, max 10MB)
@@ -229,17 +309,7 @@ financial-document-analyzer/
    - Ensure file type is supported (.pdf, .docx, .doc)
    - Verify file is not corrupted
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

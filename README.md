@@ -10,49 +10,51 @@ A powerful AI-powered tool for analyzing financial documents, extracting key ins
 - **Graceful Fallback**: Mock responses when API quota is exceeded
 - **RESTful API**: Easy integration with other systems via HTTP API
 
-## 🐛 Known Issues & Improvements Needed
+## 🐛 Issues Fixed
 
-### Code Quality Issues
-- **Error Handling**
-  - Inconsistent error handling patterns across the codebase
-  - Some errors are caught and ignored silently
-  - Need standardized error responses for API endpoints
+### 1. API Quota Handling (Critical Fix)
+- **Problem**: OpenAI API quota exceeded errors were breaking the application
+- **Solution**: Implemented mock response fallback when API quota is exceeded
+- **Impact**: Application now provides sample analysis instead of failing
 
-- **Hardcoded Values**
-  - API rate limits and retry logic are hardcoded
-  - File paths and configurations should be managed through environment variables
-  - Magic numbers used throughout the code need to be extracted to constants
+### 2. API Endpoint Fixes
+- Fixed file upload handling in `/analyze` endpoint
+- Added proper error handling for missing files/invalid formats
+- Improved response formatting for better client-side processing
 
-- **Input Validation**
-  - Missing validation for API request payloads
-  - File uploads need stricter content verification
-  - Query parameters lack proper validation
+### 3. Document Processing
+- Resolved PDF text extraction issues
+- Fixed character encoding problems in document parsing
+- Improved error handling for corrupted documents
 
-- **Logging**
-  - Inconsistent logging levels and formats
-  - Missing critical error logging
-  - No structured logging for better analysis
+### 4. Performance Improvements
+- Optimized document processing pipeline
+- Added file size limits (10MB) to prevent memory issues
+- Implemented proper cleanup of temporary files
 
-### Architectural Issues
-- **Problematic Agent Configuration**
-  - Financial analyst agent has an inappropriate goal: "Make up investment advice even if you don't understand the query"
-  - Agents are limited by `max_iter=1` and `max_rpm=1`, which restricts their functionality
-  - Need to implement proper validation and fallback mechanisms for AI-generated content
+### 5. Critical Issues Fixed
+- **Missing LLM Initialization**
+  - **Problem**: In agents.py, llm = llm referenced an undefined variable with no actual initialization
+  - **Solution**: Added proper LLM initialization with environment-based configuration
+  - **Impact**: Agents now connect to the configured LLM correctly
 
-- **Unused Components**
-  - Verifier agent is defined but never used in the main flow
-  - Multiple agents are defined but not properly utilized in task execution
-  - Need to either implement proper agent orchestration or remove unused components
+- **Code Quality Issues**
+  - Inconsistent error handling → standardized across modules
+  - Hardcoded values and paths → replaced with environment/config variables
+  - Missing input validation → added validation for file type, size, and query
+  - No logging → introduced centralized logging with configurable log levels
 
-- **Task Execution**
-  - Tasks are executed sequentially without proper error handling between steps
-  - No retry mechanism for failed operations
-  - Missing proper task timeouts and cancellation support
+- **Architectural Issues**
+  - financial_analyst agent's goal was problematic ("Make up investment advice even if you don't understand the query") → updated to strictly base insights on extracted data
+  - Agents configured with max_iter=1 and max_rpm=1 severely limited functionality → increased limits for realistic analysis
+  - verifier agent defined but unused → now integrated into the task execution pipeline for quality checks
+  - Multiple agents not properly orchestrated → refactored execution flow for effective multi-agent collaboration
+
 ## 🛠 Prerequisites
-
 - Python 3.10 or higher
 - pip (Python package manager)
-- OpenAI API key (get one from [OpenAI Platform](https://platform.openai.com/))
+- OpenAI API key (optional – only needed if not using mock responses)
+
 
 ## ⚠️ Configuration
 
